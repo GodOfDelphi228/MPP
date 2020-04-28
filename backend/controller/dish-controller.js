@@ -7,18 +7,18 @@ exports.getAllDishes = (request, response) => {
         console.log("retrieving dishes2...");
         if (err) {
             console.log(err);
-            response.json({
+            response.status(500).json({
                 status: "error",
                 message: err,
             });
         } else {
             console.log("success");
+            response.json({
+                status: "success",
+                message: "News retrieved successfully",
+                payload: news
+            });
         }
-        response.json({
-            status: "success",
-            message: "News retrieved successfully",
-            payload: news
-        });
     })
 };
 
@@ -31,12 +31,14 @@ exports.getById = (request, response) => {
         return;
     }
     Dishes.findById(id, (err, news) => {
-        if (err)
-            response.send(err);
-        response.status(200).send({
-            message: 'News details.',
-            payload: news
-        });
+        if (err) {
+            response.status(500).send(err);
+        } else {
+            response.status(200).send({
+                message: 'News details.',
+                payload: news
+            });
+        }
     });
 };
 
@@ -67,7 +69,7 @@ exports.update = (request, response) => {
     }
     Dishes.findById(id,(err, dish) => {
         if (err) {
-            response.send(err);
+            response.status(500).send(err);
         }
         dish.name = request.body.description ? request.body.name : dish.name;
         dish.description = request.body.description ? request.body.description : dish.description;
