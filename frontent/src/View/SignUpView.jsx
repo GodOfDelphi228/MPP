@@ -40,10 +40,10 @@ class Registration extends React.Component {
         event.preventDefault();
 
         const name = event.target.elements[0].value;
-        const surname = event.target.elements[2].value;
-        const email = event.target.elements[4].value;
-        const password = event.target.elements[6].value;
-        let resultPromise = this.context.registration(name,surname,email,password);
+        //const surname = event.target.elements[2].value;
+        const email = event.target.elements[2].value;
+        const password = event.target.elements[4].value;
+        let resultPromise = this.context.registration(name,email,password);
         resultPromise.then(() => {
             this.props.history.push(Routes.dishes);
         }).catch(reason => {
@@ -75,7 +75,7 @@ class Registration extends React.Component {
                                     }}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={6}>
+                            {/*<Grid item xs={12} sm={6}>
                                 <TextField
                                     variant="outlined"
                                     required
@@ -88,7 +88,7 @@ class Registration extends React.Component {
                                         style: fieldStyle,
                                     }}
                                 />
-                            </Grid>
+                            </Grid>*/}
                             <Grid item xs={12}>
                                 <TextField
                                     variant="outlined"

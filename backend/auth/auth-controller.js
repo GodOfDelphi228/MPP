@@ -9,7 +9,6 @@ exports.signUp = (request, response) => {
     console.log(request.body);
     let user = new User();
     user.name = request.body.name;
-    user.surname = request.body.surname;
     user.email = request.body.email;
     user.password = getHashPassword(request.body.password);
     user.save((err) => {
@@ -49,10 +48,11 @@ exports.signIn = (request, response) => {
     })
 };
 let generationToken = (user) => {
+    console.log(user);
     return jwt.sign({
         name: user.name,
         email: user.email,
-        surname: user.surname
+        id: user.id
     }, auth.secretKey, {expiresIn: auth.expires});
 };
 

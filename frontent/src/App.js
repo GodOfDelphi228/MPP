@@ -11,27 +11,33 @@ import {AuthContext} from "./AuthProvider";
 import SignIn from "./View/SignInView";
 import SignUp from "./View/SignUpView";
 import NewDish from "./View/NewDishView";
+import {socket} from "./connection/requests";
 import DishPageView from "./View/DishPageView";
 
 
 const port = 3003;
 class App extends React.Component {
+    componentWillUnmount() {
+        socket.close()
+    }
     render() {
         return (
             <div className="App" style={{backgroundColor: "#E0E5EC"}}>
                 <BrowserRouter>
                     <HeaderView/>
-                    {this.context.currentUser ?
+                    {
+                        this.context.currentUser ?
                         <Switch>
                             <Route exact path={Routes.newDish} component={NewDish}/>
                             <Route exact path={Routes.dishes} component={DishList}/>
-                            <Route exact path={Routes.login} component={SignIn}/>
-                            <Route exact path={Routes.registration} component={SignUp}/>
+                            <Route exact path={Routes.dishDetail} component={DishPageView}/>
+                            {/*<Route exact path={Routes.login} component={SignIn}/>
+                            <Route exact path={Routes.registration} component={SignUp}/>*/}
                             <Redirect to={Routes.dishes}/>
                         </Switch>
                         :
                         <Switch>
-                            <Route exact path={Routes.dishes} component={DishList}/>
+                            {/*<Route exact path={Routes.dishes} component={DishList}/>*/}
                             <Route exact path={Routes.login} component={SignIn}/>
                             <Route exact path={Routes.registration} component={SignUp}/>
                             <Redirect to={Routes.login}/>
