@@ -58,7 +58,8 @@ export const getUserFromStorage = () => {
     let user = {
         name: data.name,
         email: data.email,
-        id: data.id
+        id: data.id,
+        token: token 
     };
     console.log(user);
     return user;

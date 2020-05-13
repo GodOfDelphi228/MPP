@@ -1,9 +1,13 @@
+const jwt = require('jsonwebtoken');
 const Dishes = require('../model/dish-model');
 const ObjectId = require('mongoose').Types.ObjectId;
+const auth = require('../auth/auth');
 
 exports.getAllDishes = (params,returnFunction) => {
+    let token = params.token;
+    let user = jwt.verify(token, auth.secretKey);
     Dishes.find({
-        restaurant_id: params.restaurant_id// params.restaurant_id
+        restaurant_id: user.id
     }).sort({[params.sort]: params.order}).exec((err, news) => {
         console.log(news);
         console.log("error: " + err);

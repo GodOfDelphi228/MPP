@@ -57,7 +57,7 @@ class DishList extends React.Component {
         } else {
             this.setState({loading: true});
             let params = {
-                restaurant_id: getUserFromStorage().id,
+                token: getUserFromStorage().token,
                 sort: kind == 0 ? 'rating' : 'price',
                 order: order ? 1 : -1
             };
