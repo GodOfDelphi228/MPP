@@ -1,57 +1,62 @@
+const jwt = require('jsonwebtoken');
 const Dishes = require('../model/dish-model');
 const ObjectId = require('mongoose').Types.ObjectId;
+const auth = require('../auth/auth');
 
-exports.getAllDishes = (request, response) => {
-    console.log("retrieving dishes1...");
-    Dishes.find().sort({[request.query.sort]:request.query.order}).exec((err, news) => {
-        console.log("retrieving dishes2...");
+exports.getAllDishes = (params,returnFunction) => {
+    let token = params.token;
+    let user = jwt.verify(token, auth.secretKey);
+    Dishes.find({
+        restaurant_id: user.id
+    }).sort({[params.sort]: params.order}).exec((err, news) => {
+        console.log(news);
+        console.log("error: " + err);
         if (err) {
-            console.log(err);
-            response.status(500).json({
-                status: "error",
+            returnFunction( {
+                status: 500,
                 message: err,
             });
-        } else {
-            console.log("success");
-            response.json({
-                status: "success",
-                message: "News retrieved successfully",
-                payload: news
-            });
         }
-    })
+        returnFunction({
+            status: 200,
+            message: "Dishes retrieved successfully",
+            payload: news
+        });
+    });
+
 };
 
-exports.getById = (request, response) => {
-    let id = request.params.dish_id;
+exports.getById = (id,returnFunction) => {
+    console.log("GetByID called, id: " + id);
     if (!ObjectId.isValid(id)) {
-        response.status(400).send({
-            message: 'Bad id.'
-        });
-        return;
+        returnFunction({status:500});
     }
     Dishes.findById(id, (err, news) => {
         if (err) {
-            response.status(500).send(err);
-        } else {
-            response.status(200).send({
-                message: 'News details.',
-                payload: news
-            });
+            returnFunction({
+                status:500,
+                payload:{err}
+            })
         }
+        returnFunction({
+            status: 200,
+            payload: news
+        });
     });
 };
 
-exports.new = (request, response) => {
+exports.new = (dishData, returnFunction) => {
     {
-        console.log(request.body);
+        console.log(dishData);
         let dish = new Dishes();
-        dish.name = request.body.name;
-        dish.description = request.body.description;
-        dish.price = request.body.price ? request.body.price : dish.price;
-        dish.image_url = request.body.image_url;
+        dish.name = dishData.name;
+        dish.description = dishData.description;
+        dish.price = dishData.price ? dishData.price : dish.price;
+        dish.restaurant_id = dishData.restaurant_id ? dishData.restaurant_id : dish.restaurant_id;
+        dish.image_url = dishData.image_url;
+        dish.rating = (Math.random() * (4 - 5) + 5).toFixed(1)
         dish.save((err) => {
-            response.status(200).json({
+            returnFunction({
                 message: 'New dish added!',
                 payload: dish
             });
@@ -59,29 +64,37 @@ exports.new = (request, response) => {
     }
 };
 
-exports.update = (request, response) => {
-    let id = request.params.dish_id;
+exports.update = (updatedDish, completion) => {
+    console.log("Updading dish with: " + updatedDish.name);
+    let id = updatedDish._id;
     if (!ObjectId.isValid(id)) {
-        response.status(400).send({
+        console.log("Bad id");
+        return {
             message: 'Bad id.'
-        });
-        return;
+        };
     }
-    Dishes.findById(id,(err, dish) => {
+    Dishes.findById(id, (err, dish) => {
         if (err) {
-            response.status(500).send(err);
+            console.log(err);
+            completion({err});
         }
-        dish.name = request.body.description ? request.body.name : dish.name;
-        dish.description = request.body.description ? request.body.description : dish.description;
-        dish.rating = request.body.rating ? request.body.rating : dish.rating;
-        dish.price = request.body.price ? request.body.price : dish.price;
-        dish.image_url = request.body.image_url ? request.body.image_url : dish.image_url;
+        dish.name = updatedDish.description ? updatedDish.name : dish.name;
+        dish.description = updatedDish.description ? updatedDish.description : dish.description;
+        dish.rating = updatedDish.rating ? updatedDish.rating : dish.rating;
+        dish.price = updatedDish.price ? updatedDish.price : dish.price;
+        dish.image_url = updatedDish.image_url;//? updatedDish.image_url : dish.image_url;
         dish.save((err) => {
             if (err) {
-                response.status(400).send(err);
+                console.log(err);
+                completion({
+                    status: 500,
+                    message: err
+                })
             }
-            response.status(200).send({
-                message: 'Dish Info updated',
+            console.log("Updated: " + dish);
+            completion( {
+                status:200,
+                message: 'Dish ' + dish.name + ' updated',
                 payload: dish
             });
         });
@@ -89,22 +102,24 @@ exports.update = (request, response) => {
 };
 
 
-exports.delete = function (request, response) {
-    let id = request.params.dish_id;
+exports.delete = (dish_id, completion) => {
+    let id = dish_id;
     if (!ObjectId.isValid(id)) {
-        response.status(400).send({
+        console.log("Bad ID: " + dish_id);
+        completion ({
             message: 'Bad id.'
         });
-        return;
     }
     Dishes.deleteOne({
         _id: id
     }, (err, news) => {
+        console.log(err);
         if (err)
-            response.send(err);
-        response.status(204).send({
-            status: "success",
-            message: 'Contact deleted'
+            return (err);
+        completion( {
+            status: 204,
+            message: 'Dish deleted',
+            payload:{}
         });
     });
 };

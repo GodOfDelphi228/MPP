@@ -1,11 +1,18 @@
-const apiUrl = "http://localhost:3003";
-export const endpoints = {
-    getDish: id => `${apiUrl}/dishes/${id}`,
-    putDish: id => `${apiUrl}/dishes/${id}`,
-    deleteDish: id => `${apiUrl}/dishes/${id}`,
-    postDishes: `${apiUrl}/dishes`,
-    getDishList: `${apiUrl}/dishes`,
-
+export const apiUrl = "http://localhost:3003";
+export const endpointsServer = {
+    getDish: 'get dish',
+    putDish: 'update dish',
+    deleteDish: 'delete dish',
+    postDish: 'create dish',
+    getDishList: 'get all dishes',
+};
+export const endpointsClient = {
+    updated:'updated',
+    getAll:'dishes',
+    getNew:'new dish',
+    getDelete: 'dish deleted'
+};
+export const authEndpoints = {
     login:`${apiUrl}/signIn`,
-    registration:`${apiUrl}/signUp`
+    registration:`${apiUrl}/signUp`,
 };

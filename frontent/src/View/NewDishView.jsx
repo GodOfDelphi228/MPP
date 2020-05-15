@@ -5,10 +5,13 @@ import Container from "@material-ui/core/Container";
 import Grid from "@material-ui/core/Grid";
 import Box from "@material-ui/core/Box";
 import Button from "@material-ui/core/Button";
-import {endpoints} from "../connection/endpoints";
+import {endpointsClient, endpointsServer} from "../connection/endpoints";
 import {withRouter} from 'react-router-dom';
 import {Routes} from "../connection/routes";
 import {RestRequest} from "../connection/requests";
+import {getUserFromStorage} from "../connection/auth";
+import {socket} from "../connection/requests";
+
 
 const backColor = "#E0E5EC";
 const fieldStyle = {
@@ -39,16 +42,24 @@ class NewDishView extends React.Component {
         const description = event.target.elements[2].value;
         const image_url = event.target.elements[4].value;
         const price = event.target.elements[6].value;
-        RestRequest.post(endpoints.postDishes, {}, {name, description, image_url, price})
+        const restaurant_id = getUserFromStorage().id;
+        console.log(getUserFromStorage());
+        socket.on(endpointsClient.getNew,()=>{
+            this.props.history.push({pathname: Routes.dishes});
+            //this.props.history.push(Routes.dishes);
+        });
+        socket.emit(endpointsServer.postDish, {name, description, image_url, price, restaurant_id});
+        /*RestRequest.post(endpointsServer.postDish, {}, {name, description, image_url, price, restaurant_id})
             .then((response) => {
                 this.props.history.push(Routes.dishes);
             }).catch(reason => {
             if (reason.response.status === 401 || reason.response.status === 403) this.props.history.push(Routes.login);
-        });
+        });*/
     };
 
     render() {
         return (
+
             <Container>
                 <form noValidate autoComplete='off' onSubmit={this.onSubmit}>
                     <Grid

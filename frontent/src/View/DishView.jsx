@@ -6,11 +6,14 @@ import Box from "@material-ui/core/Box";
 import Typography from "@material-ui/core/Typography";
 import CardActions from "@material-ui/core/CardActions";
 import Button from "@material-ui/core/Button";
-import {endpoints} from "../connection/endpoints";
-import {RestRequest} from "../connection/requests";
+import {endpointsClient, endpointsServer} from "../connection/endpoints";
+import {RestRequest, socket} from "../connection/requests";
 import {AuthContext} from "../AuthProvider";
 import {withRouter} from "react-router-dom";
 import {Routes} from "../connection/routes";
+import StartIcon from '@material-ui/icons/Star';
+import DishPageView from "./DishPageView";
+import {getRouteForUpdate} from "../connection/routes";
 
 const backColor = "#E0E5EC";
 const cardStyle = {
@@ -28,6 +31,10 @@ const removeButtonStyle = {
         " -10px -10px 30px #feffff",
     "margin": "10px"
 };
+
+const likeStyle = {
+    "color":"orange"
+}
 
 const buttonStyle = {
     "width":"30px",
@@ -50,32 +57,56 @@ const imageStyle = {
 class DishView extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {dish: props.dish};
+        this.state = {dish: props.dish, goToDetail: false};
     }
 
     detail = () => {
-        this.props.history.push(Routes.dishes+"/"+this.props.dish['_id']);
+        //this.setState({goToDetail: true});
+        //navigation.navigate(Routes.dishDetail, {dish: this.props.dish});
+        //this.props.push(Routes.dishes+"/"+this.props.dish['_id']);
+        //this.props.history.push(Routes.dishDetail+"/"+this.props.dish['_id']);
+        //this.props.navigation.navigate(Routes.dishDetail, {dish: this.props.dish});
+        //return <DishPageView dish={this.props.dish} />
+        console.log("dishView: "+this.props.dish._id);
+        //this.props.history.push({pathname: Routes.dishDetail, state: {dish: this.props.dish}});
+
+        this.props.history.push(getRouteForUpdate(Routes.dishDetail, this.props.dish._id));
     }
 
     delete = () => {
-        RestRequest.delete(endpoints.deleteDish(this.props.dish['_id'])).then((response) => {
+        /*RestRequest.delete(endpointsServer.deleteDish(this.props.dish['_id'])).then((response) => {
             this.props.deleteOne(this.props.dish);
         }).catch(reason => {
             if (reason.response.status === 401 || reason.response.status === 403) this.props.history.push(Routes.login);
+        });*/
+        socket.on(endpointsClient.getDelete, (data) => {
+            //console.log(data.payload);
+           //this.setState({loading: false, dish: data.payload, order});
+            this.props.deleteOne(this.props.dish);
         });
+        let dish = this.props.dish;
+        console.log(dish);
+        socket.emit(endpointsServer.deleteDish, dish._id);
     };
 
     increasePrice = () => {
         if (this.context.currentUser) {
             let dish = this.props.dish;
             dish.price++;
-            RestRequest.put(endpoints.putDish(this.props.dish['_id']), {}, dish).then(response => {
+            /*RestRequest.put(endpointsServer.putDish(this.props.dish['_id']), {}, dish).then(response => {
                 let dish = this.state.dish;
                 dish.price = response.data.payload.price;
-                this.setState(dish);
+                this.setState({dish: dish});
             }).catch(reason => {
                 if (reason.response.status === 401 || reason.response.status === 403) this.props.history.push(Routes.login);
+            });*/
+            socket.on(endpointsClient.updated, (data) => {
+                console.log(data);
+                if (data.status === 401 || data.status === 403) this.props.history.push(Routes.login);
+                dish.likes = data.payload.likes;
+                this.setState(dish);
             });
+            socket.emit(endpointsServer.putDish,dish);
         }
 
     };
@@ -84,13 +115,20 @@ class DishView extends React.Component {
         if (this.context.currentUser) {
             let dish = this.props.dish;
             dish.price--;
-            RestRequest.put(endpoints.putDish(this.props.dish['_id']), {}, dish).then(response => {
+            /*RestRequest.put(endpointsServer.putDish(this.props.dish['_id']), {}, dish).then(response => {
                 let dish = this.state.dish;
                 dish.price = response.data.payload.price;
-                this.setState(dish);
+                this.setState({dish: dish});
             }).catch(reason => {
                 if (reason.response.status === 401 || reason.response.status === 403) this.props.history.push(Routes.login);
+            });*/
+            socket.on(endpointsClient.updated, (data) => {
+                console.log(data);
+                if (data.status === 401 || data.status === 403) this.props.history.push(Routes.login);
+                dish.likes = data.payload.likes;
+                this.setState(dish);
             });
+            socket.emit(endpointsServer.putDish,dish);
         }
 
     };
@@ -126,10 +164,14 @@ class DishView extends React.Component {
                                 :
                                 <></>
                         }
-                        <Button onClick={this.detail} aria-label="Plus">
+                        {/*<DishPageView dish={this.props.dish} />*/}
+                        {<Button onClick={this.detail} aria-label="Plus">
                             Detail
-                        </Button>
-
+                        </Button>}
+                        <Typography>
+                            <StartIcon style={likeStyle}/>
+                            {this.props.dish.rating }
+                        </Typography>
                     </CardActions>
                 </Card>
             </Box>
