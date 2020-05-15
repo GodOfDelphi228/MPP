@@ -1,120 +1,58 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
-import ReactDOM from 'react-dom';
-import {BrowserRouter, Redirect, Route, Switch} from 'react-router-dom';
-import HeaderView from "./View/HeaderView";
-import DishList from "./View/DishList";
-import {Routes} from "./connection/routes";
-//import CreateNews from "./component/news/CreateNews";
-import {AuthContext} from "./AuthProvider";
-import SignIn from "./View/SignInView";
-import SignUp from "./View/SignUpView";
-import NewDish from "./View/NewDishView";
-import {socket} from "./connection/requests";
-import DishPageView from "./View/DishPageView";
+import {BrowserRouter, Redirect, Switch} from 'react-router-dom';
+import Navbar from "./component/navbar/Navbar";
+import DishList from "./component/dishes/DishList";
+import {Routes} from "./constant/Routes";
+import CreateDish from "./component/dishes/Editor";
+import Registration from "./component/registration/Registration";
+import {AuthContext} from "./component/AuthProvider";
+import Login from "./component/login/Login";
+import {ApolloProvider} from 'react-apollo';
+import ApolloClient from 'apollo-client';
+import {endpoints} from "./constant/endpoints";
+import {OnlyGuestRoute} from "./route/OnlyGuestRoute";
+import {PrivateRoute} from "./route/PrivateRoute";
+import {createHttpLink} from "apollo-link-http";
+import {setContext} from 'apollo-link-context';
+import {InMemoryCache} from 'apollo-cache-inmemory';
 
+const httpLink = createHttpLink({
+    uri: endpoints.graphql,
+});
 
-const port = 3003;
-class App extends React.Component {
-    componentWillUnmount() {
-        socket.close()
+const authLink = setContext((_, { headers }) => {
+    const token = localStorage.getItem('Jwt token');
+    return {
+        headers: {
+            ...headers,
+            authorization: token ? `Bearer ${token}` : "",
+        }
     }
+});
+
+const client = new ApolloClient({
+    link: authLink.concat(httpLink),
+    cache: new InMemoryCache()
+});
+
+class App extends React.Component {
     render() {
         return (
-            <div className="App" style={{backgroundColor: "#E0E5EC"}}>
+            <ApolloProvider client={client}>
                 <BrowserRouter>
-                    <HeaderView/>
-                    {
-                        this.context.currentUser ?
-                        <Switch>
-                            <Route exact path={Routes.newDish} component={NewDish}/>
-                            <Route exact path={Routes.dishes} component={DishList}/>
-                            <Route exact path={Routes.dishDetail} component={DishPageView}/>
-                            {/*<Route exact path={Routes.login} component={SignIn}/>
-                            <Route exact path={Routes.registration} component={SignUp}/>*/}
-                            <Redirect to={Routes.dishes}/>
-                        </Switch>
-                        :
-                        <Switch>
-                            {/*<Route exact path={Routes.dishes} component={DishList}/>*/}
-                            <Route exact path={Routes.login} component={SignIn}/>
-                            <Route exact path={Routes.registration} component={SignUp}/>
-                            <Redirect to={Routes.login}/>
-                        </Switch>
-                    }
+                    <Navbar/>
+                    <Switch>
+                        <OnlyGuestRoute exact path={Routes.login} component={Login}/>
+                        <OnlyGuestRoute exact path={Routes.registration} component={Registration}/>
+                        <PrivateRoute exact path={Routes.editor} component={CreateDish}/>
+                        <PrivateRoute exact path={Routes.dishes} component={DishList}/>
+                        <Redirect to={Routes.dishes}/>
+                    </Switch>
                 </BrowserRouter>
-            </div>
+            </ApolloProvider>
         );
     }
 }
+
 App.contextType = AuthContext;
 export default App;
-
-/*
-/*
-export class Main extends Component {
-    mmm() {
-        return (<>
-                <div className="news-container" id="NewsContainer">
-                    <a href="http://localhost:3003/url"> url </a>
-                </div>
-            </>
-        );
-    }
-    render(){
-        console.log("Main");
-        ReactDOM.render((<>{this.mmm()}</>), document.getElementById("NewsBody"));
-        console.log("Main2");
-        //this.initListeners();
-        //this.loadNews()
-        return (
-            <></>
-        );
-    }
-}*/
-/*
-function App() {
-    function getJson() {
-        return <a href = "http://localhost:3003/dishes">Dishes</a>
-    }
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-        <Main />
-    </div>
-  );
-}
-
-export default App;
-
-
-class App extends React.Component {
-    render() {
-        return (
-            <div className="App">
-                <p>111111111</p>
-                <BrowserRouter>
-                    <Route exact path={Routes.dishes} component={DishList}/>
-                    <Redirect to={Routes.dishes}/>
-                </BrowserRouter>
-            </div>
-        );
-    }
-};
-//App.contextType = AuthContext;
-export default App;
-*/
